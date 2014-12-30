@@ -25,9 +25,6 @@ class BrowserWindow(BaseWindow):
         'chrome://browser/locale/preferences/preferences.properties',
     ]
 
-    def __init__(self, element):
-        BaseWindow.__init__(self, element)
-
     @property
     def is_private(self):
         """Returns True if it is a Private Browsing window."""
