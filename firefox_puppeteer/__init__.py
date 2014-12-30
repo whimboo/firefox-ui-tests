@@ -41,18 +41,22 @@ class Puppeteer(object):
 
     @use_class_as_property('api.keys.Keys')
     def keys(self):
-        """
-        Provides a definition of control keys to use with keyboard shortcuts.
-        For example, keys.CONTROL or keys.ALT.
+        """Provides an API with additional key definitions.
 
         See the :class:`~api.keys.Keys` reference.
+        """
+
+    @use_class_as_property('api.observer.Observer')
+    def observer(self):
+        """Provides an API for using observer notifications.
+
+        See the :class:`~api.observer.Observer` reference.
         """
 
     @use_class_as_property('api.prefs.Preferences')
     def prefs(self):
         """
-        Provides an api for setting and inspecting preferences, as see in
-        about:config.
+        Provides an API to interact with preferences
 
         See the :class:`~api.prefs.Preferences` reference.
         """
