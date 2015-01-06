@@ -7,8 +7,6 @@ from marionette.errors import NoSuchElementException
 
 from firefox_ui_harness.testcase import FirefoxTestCase
 
-from greenlight.lib.api.observer import Observer
-
 
 class TestWindows(FirefoxTestCase):
 
@@ -16,10 +14,8 @@ class TestWindows(FirefoxTestCase):
         url = self.marionette.absolute_url('layout/mozilla')
 
         first_window = self.windows.current
-        observer = Observer(lambda: self.marionette)
-        observer.register(['toplevel-window-ready'])
-        first_window.send_shortcut('ctrl-n')
-        observer.completed()
+        first_window.open()
+        return
 
         # Those actions will fail if the current window is not a browser window
         first_window.send_shortcut('ctrl-n')

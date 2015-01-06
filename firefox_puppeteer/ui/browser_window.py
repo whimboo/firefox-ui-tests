@@ -53,6 +53,6 @@ class BrowserWindow(BaseWindow):
         See the :class:`~ui.tabbar.Tabs` reference.
         """
 
-    def open(self):
-        # TODO: To be implemented
-        pass
+    #def open(self):
+    #    # TODO: To be implemented
+    #    pass

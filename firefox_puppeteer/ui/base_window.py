@@ -6,6 +6,7 @@ from marionette.keys import Keys
 
 from .. import DOMElement
 from ..api.l10n import L10n
+from ..api.observer import Observer
 from ..decorators import use_class_as_property
 
 
@@ -113,9 +114,14 @@ class BaseWindow(DOMElement):
         return ret
 
     def open(self):
-        # TODO: To be implemented by calling window.open() and observer
-        # notifications for the newly opened window
-        pass
+        observer = Observer(lambda: self.marionette)
+        observer.register(['toplevel-window-ready'])
+        self.marionette.execute_script("""
+          window.open();
+        """)
+        observer.wait()
+
+        return  # window
 
     def switch_to(self):
         """Switches to this browser window."""

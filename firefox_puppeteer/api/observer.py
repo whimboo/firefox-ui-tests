@@ -2,62 +2,83 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from marionette import Wait
-
 from ..base import BaseLib
 
 
 class Observer(BaseLib):
     """Class to handle observer notifications."""
 
-    # needs clean-up code to remove registered topics
-    def __init__(self, marionette_getter):
-        print '***** init observer ********'
-        BaseLib.__init__(self, marionette_getter)
-
     def register(self, topics):
         # needs check so we only register once
 
-        self.topics = topics
+        if not isinstance(topics, list):
+            self.topics = [topics]
+        else:
+            self.topics = topics
 
         """Registers the topics to receive notifications."""
         with self.marionette.using_context('chrome'):
             self.marionette.execute_script("""
                 Cu.import("resource://gre/modules/Services.jsm");
 
-                function Observer(aTopics) {
-                  this.topics = aTopics;
-                  this.register();
-                }
+                function Observer() {}
 
                 Observer.prototype = {
                   /**
-                   * Register all topics
+                   * Callback for registered observer topics
                    */
-                  register : function () {
-                    this.topics.forEach(aTopic => {
-                      Services.obs.addObserver(this, aTopic, false);
-                    });
-                  },
-
                   observe : function (aSubject, aTopic, aData) {
                     try {
                       Services.obs.removeObserver(this, aTopic);
                     }
                     catch (e) {}
 
-                    window.alert(aTopic);
+                    log('Observed topic: ' + aTopic)
+                    // Save off additional data for topic e.g. window id
+                  },
+
+                  /**
+                   * Register observer topics
+                   */
+                  register : function (aTopics) {
+                    // Remove any old registered topic first
+                    this.remove(this.topics);
+
+                    // Register new topics
+                    this.topics = aTopics;
+                    this.topics.forEach(aTopic => {
+                      Services.obs.addObserver(this, aTopic, false);
+                    });
+                  },
+
+                  /**
+                   * Remove observer topics
+                   */
+                  remove : function (aTopics) {
+                    if (!aTopics) {
+                      return;
+                    }
+
+                    aTopics.forEach(aTopic => {
+                      try {
+                        Services.obs.removeObserver(this, aTopic);
+                      }
+                      catch (e) {}
+                    });
                   }
                 };
 
-                var observer = new Observer(arguments[0]);
+                if (!this.observer) {
+                  this.observer = new Observer();
+                }
 
-            """, script_args=[self.topics])
+                this.observer.register(arguments[0]);
+            """, script_args=[self.topics], new_sandbox=False)
 
-    def completed(self):
+    def wait(self, condition):
         with self.marionette.using_context('chrome'):
-            self.marionette.execute_script("""
-              window.alert(observer);
-            """, new_sandbox=False)
-
-        return True
+            return self.marionette.execute_async_script("""
+              setTimeout(function () {
+                marionetteScriptFinished(true);
+              }, 500);
+            """, script_args=[condition], new_sandbox=False)
