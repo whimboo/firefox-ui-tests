@@ -437,7 +437,8 @@ class BrowserWindow(BaseWindow):
 
         if not self._tabbar:
             from .tabbar import TabBar
-            self._tabbar = TabBar(lambda: self.marionette, self)
+            tabbar = self.window.find_element('id', 'tabbrowser-tabs')
+            self._tabbar = TabBar(lambda: self.marionette, self, tabbar)
 
         return self._tabbar
 

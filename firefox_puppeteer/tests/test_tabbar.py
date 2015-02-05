@@ -7,7 +7,14 @@ from firefox_ui_harness.testcase import FirefoxTestCase
 
 class TestTabBar(FirefoxTestCase):
 
-    def test_basics(self):
+    def test_pref(self):
+        print self.prefs.get_pref('app.update.enabled')
+        self.prefs.set_pref('app.update.enabled', True)
+        print self.prefs.get_pref('app.update.enabled')
+        self.marionette.restart()
+        print self.prefs.get_pref('app.update.enabled')
+
+    def tst_basics(self):
         tabbar = self.browser.tabbar
 
         self.assertEqual(tabbar.window, self.browser)
@@ -18,7 +25,7 @@ class TestTabBar(FirefoxTestCase):
         self.assertEqual(tabbar.newtab_button.get_attribute('localName'), 'toolbarbutton')
         self.assertEqual(tabbar.toolbar.get_attribute('localName'), 'tabs')
 
-    def test_open_close(self):
+    def tst_open_close(self):
         tabbar = self.browser.tabbar
 
         self.assertEqual(len(tabbar.tabs), 1)
@@ -78,7 +85,7 @@ class TestTabBar(FirefoxTestCase):
         self.assertEqual(len(tabbar.tabs), 1)
         self.assertEqual(orig_tab.handle, self.marionette.current_window_handle)
 
-    def test_switch_to(self):
+    def tst_switch_to(self):
         tabbar = self.browser.tabbar
 
         # Open a new tab in the foreground (will be auto-selected)
@@ -104,15 +111,15 @@ class TestTabBar(FirefoxTestCase):
 
 class TestTab(FirefoxTestCase):
 
-    def test_basic(self):
+    def tst_basic(self):
         tab = self.browser.tabbar.tabs[0]
 
         self.assertEqual(tab.window, self.browser)
 
-        self.assertEqual(tab.tab_element.get_attribute('localName'), 'tab')
+        self.assertEqual(tab.get_attribute('localName'), 'tab')
         self.assertEqual(tab.close_button.get_attribute('localName'), 'toolbarbutton')
 
-    def test_close(self):
+    def tst_close(self):
         tabbar = self.browser.tabbar
 
         self.assertEqual(len(tabbar.tabs), 1)
@@ -138,7 +145,7 @@ class TestTab(FirefoxTestCase):
             self.assertEqual(tabbar.tabs[0].handle, self.marionette.current_window_handle)
             self.assertNotEqual(new_tab.handle, tabbar.tabs[0].handle)
 
-    def test_switch_to(self):
+    def tst_switch_to(self):
         tabbar = self.browser.tabbar
 
         new_tab = tabbar.open_tab()

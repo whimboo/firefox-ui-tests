@@ -26,7 +26,8 @@ class TabBar(UIBaseLib):
 
         :returns: :class:`~ui.menu.MenuPanel` instance
         """
-        return MenuPanel(lambda: self.marionette, self.window)
+        with self.marionette.using_context('chrome'):
+            return MenuPanel(lambda: self.marionette, self.window)
 
     @property
     def newtab_button(self):
@@ -34,7 +35,8 @@ class TabBar(UIBaseLib):
 
         :returns: Reference to the new tab button
         """
-        return self.toolbar.find_element('anon attribute', {'anonid': 'tabs-newtab-button'})
+        with self.marionette.using_context('chrome'):
+            return self.toolbar.find_element('anon attribute', {'anonid': 'tabs-newtab-button'})
 
     @property
     def tabs(self):
@@ -42,9 +44,9 @@ class TabBar(UIBaseLib):
 
         :returns: List of :class:`Tab`'s
         """
-        tabs = self.toolbar.find_elements('tag name', 'tab')
-
-        return [Tab(lambda: self.marionette, self.window, tab) for tab in tabs]
+        with self.marionette.using_context('chrome'):
+            tabs = self.toolbar.find_elements('tag name', 'tab')
+            return [Tab(lambda: self.marionette, self.window, tab) for tab in tabs]
 
     @property
     def toolbar(self):
@@ -52,7 +54,8 @@ class TabBar(UIBaseLib):
 
         :returns: Reference to the tabs toolbar
         """
-        return self.marionette.find_element('id', 'tabbrowser-tabs')
+        with self.marionette.using_context('chrome'):
+            return self.inner
 
     # Properties for helpers when working with the tabs toolbar #
 
@@ -62,7 +65,8 @@ class TabBar(UIBaseLib):
 
         :return: Index of the selected tab
         """
-        return int(self.toolbar.get_attribute('selectedIndex'))
+        with self.marionette.using_context('chrome'):
+            return int(self.toolbar.get_attribute('selectedIndex'))
 
     @property
     def selected_tab(self):
@@ -70,7 +74,8 @@ class TabBar(UIBaseLib):
 
         :returns: :class:`Tab` instance
         """
-        return self.tabs[self.selected_index]
+        with self.marionette.using_context('chrome'):
+            return self.tabs[self.selected_index]
 
     # Methods for helpers when working with the tabs toolbar #
 
@@ -124,20 +129,21 @@ class TabBar(UIBaseLib):
         """
         start_handles = self.marionette.window_handles
 
-        # Prepare action which triggers the opening of the browser window
-        if callable(trigger):
-            trigger(self.selected_tab)
-        elif trigger == 'button':
-            self.window.tabbar.newtab_button.click()
-        elif trigger == 'menu':
-            # TODO: Make use of menubar class once it supports ids
-            menu = self.window.marionette.find_element('id', 'menu_newNavigatorTab')
-            menu.click()
-        elif trigger == 'shortcut':
-            self.window.send_shortcut(self.window.get_entity('tabCmd.commandkey'), accel=True)
-        # elif - need to add other cases
-        else:
-            raise ValueError('Unknown opening method: "%s"' % trigger)
+        with self.marionette.using_context('chrome'):
+            # Prepare action which triggers the opening of the tab
+            if callable(trigger):
+                trigger(self.selected_tab)
+            elif trigger == 'button':
+                self.window.tabbar.newtab_button.click()
+            elif trigger == 'menu':
+                # TODO: Make use of menubar class once it supports ids
+                menu = self.window.marionette.find_element('id', 'menu_newNavigatorTab')
+                menu.click()
+            elif trigger == 'shortcut':
+                self.window.send_shortcut(self.window.get_entity('tabCmd.commandkey'), accel=True)
+            # elif - need to add other cases
+            else:
+                raise ValueError('Unknown opening method: "%s"' % trigger)
 
         # TODO: Needs to be replaced with event handling code (bug 1121705)
         Wait(self.marionette).until(
@@ -205,17 +211,16 @@ class TabBar(UIBaseLib):
 class Tab(UIBaseLib):
     """Wraps a tab DOM element."""
 
-    def __init__(self, marionette_getter, window, tab_element):
-        UIBaseLib.__init__(self, marionette_getter, window)
+    def __init__(self, marionette_getter, window, dom_element):
+        UIBaseLib.__init__(self, marionette_getter, window, dom_element)
 
-        self._tab_element = tab_element
-        self._handle = TabBar.get_handle_for_tab(self.marionette, tab_element)
+        self._handle = TabBar.get_handle_for_tab(self.marionette, dom_element)
 
         # Ensure the tab has been fully loaded
         Wait(self.marionette).until(
             lambda mn: mn.execute_script("""
               return !arguments[0].hasAttribute('busy');
-            """, script_args=[tab_element])
+            """, script_args=[dom_element])
         )
 
     # Properties for visual elements of tabs #
@@ -226,15 +231,8 @@ class Tab(UIBaseLib):
 
         :returns: Reference to the tab close button
         """
-        return self.tab_element.find_element('anon attribute', {'anonid': 'close-button'})
-
-    @property
-    def tab_element(self):
-        """The inner tab DOM element.
-
-        :returns: Tab DOM element
-        """
-        return self._tab_element
+        with self.marionette.using_context('chrome'):
+            return self.inner.find_element('anon attribute', {'anonid': 'close-button'})
 
     # Properties for helpers when working with tabs #
 
@@ -252,9 +250,10 @@ class Tab(UIBaseLib):
 
         :return: `True` if the tab is selected
         """
-        return self.marionette.execute_script("""
-            return arguments[0].hasAttribute('selected');
-        """, script_args=[self.tab_element])
+        with self.marionette.using_context('chrome'):
+            return self.marionette.execute_script("""
+                return arguments[0].hasAttribute('selected');
+            """, script_args=[self.inner])
 
     # Methods for helpers when working with tabs #
 
@@ -278,20 +277,21 @@ class Tab(UIBaseLib):
 
         self.switch_to()
 
-        if force:
-            self.marionette.close()
-        elif callable(trigger):
-            trigger(self)
-        elif trigger == 'button':
-            self.close_button.click()
-        elif trigger == 'menu':
-            # TODO: Make use of menubar class once it supports ids
-            menu = self.window.marionette.find_element('id', 'menu_close')
-            menu.click()
-        elif trigger == 'shortcut':
-            self.window.send_shortcut(self.window.get_entity('closeCmd.key'), accel=True)
-        else:
-            raise ValueError('Unknown closing method: "%s"' % trigger)
+        with self.marionette.using_context('chrome'):
+            if force:
+                self.marionette.close()
+            elif callable(trigger):
+                trigger(self)
+            elif trigger == 'button':
+                self.close_button.click()
+            elif trigger == 'menu':
+                # TODO: Make use of menubar class once it supports ids
+                menu = self.window.marionette.find_element('id', 'menu_close')
+                menu.click()
+            elif trigger == 'shortcut':
+                self.window.send_shortcut(self.window.get_entity('closeCmd.key'), accel=True)
+            else:
+                raise ValueError('Unknown closing method: "%s"' % trigger)
 
         Wait(self.marionette).until(
             lambda _: len(self.window.tabbar.tabs) == len(start_handles) - 1)
@@ -301,11 +301,12 @@ class Tab(UIBaseLib):
 
     def select(self):
         """Selects the tab and sets the focus to it."""
-        self.tab_element.click()
-        self.switch_to()
+        with self.marionette.using_context('chrome'):
+            self.inner.click()
+            self.switch_to()
 
-        # Bug 1121705: Maybe we have to wait for TabSelect event
-        Wait(self.marionette).until(lambda _: self.selected)
+            # Bug 1121705: Maybe we have to wait for TabSelect event
+            Wait(self.marionette).until(lambda _: self.selected)
 
     def switch_to(self):
         """Switches the context of Marionette to this tab.
@@ -313,7 +314,8 @@ class Tab(UIBaseLib):
         Please keep in mind that calling this method will not select the tab.
         Use the :func:`~Tab.select` method instead.
         """
-        self.marionette.switch_to_window(self.handle)
+        with self.marionette.using_context('chrome'):
+            self.marionette.switch_to_window(self.handle)
 
 
 class MenuPanel(UIBaseLib):

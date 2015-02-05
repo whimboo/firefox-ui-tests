@@ -28,7 +28,7 @@ class BaseLib(object):
 class UIBaseLib(BaseLib):
     """A base class for all UI element wrapper classes inside a chrome window."""
 
-    def __init__(self, marionette_getter, window):
+    def __init__(self, marionette_getter, window, dom_element):
         BaseLib.__init__(self, marionette_getter)
 
         # importing globally doesn't work
@@ -38,6 +38,33 @@ class UIBaseLib(BaseLib):
                                                    window)
         self._window = window
 
+        # TODO: add validity check
+        self._inner_element = dom_element
+
+    @property
+    def inner(self):
+        """Returns the inner DOM element.
+
+        :returns: DOM element
+        """
+        return self._inner_element
+
     @property
     def window(self):
         return self._window
+
+    def get_attribute(self, attr):
+        """Retrieves the attribute value of the wrapped inner DOM element.
+
+        :param attr: Attribute to retrieve the value from
+
+        :returns: The value of the requested attribute
+        """
+        with self.marionette.using_context('chrome'):
+            retval = self.inner.get_attribute(attr)
+
+        if retval is None:
+            raise AttributeError('\'%s\' object has no attribute \'%s\'' %
+                                 (self.__class__.__name__, attr))
+
+        return retval
