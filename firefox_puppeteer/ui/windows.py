@@ -114,6 +114,9 @@ class Windows(BaseLib):
         elif window_type == 'Browser:page-info':
             from .pageinfo.window import PageInfoWindow
             window = PageInfoWindow(lambda: self.marionette, handle)
+        elif window_type == 'Update:Wizard':
+            from dialogs import BaseDialog
+            window = BaseDialog(lambda: self.marionette, handle)
         else:
             raise errors.UnknownWindowError('Unknown window type "%s" for handle: "%s"' %
                                             (window_type, handle))
@@ -196,6 +199,9 @@ class BaseWindow(BaseLib):
     def __eq__(self, other):
         return self.handle == other.handle
 
+    def __ne__(self, other):
+        return self.handle != other.handle
+
     @property
     def closed(self):
         """Returns closed state of the chrome window.
@@ -240,6 +246,14 @@ class BaseWindow(BaseLib):
 
         See the :class:`~ui.menu.MenuBar` reference.
         """
+
+    @property
+    def title(self):
+        """Returns the title of the chrome window.
+
+        :returns: Title of the chrome window.
+        """
+        return self.window_element.get_attribute('title')
 
     @property
     def window_element(self):

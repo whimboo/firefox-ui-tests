@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from marionette_driver import By, Wait
-from marionette_driver.errors import NoSuchWindowException, TimeoutException
+from marionette_driver.errors import NoSuchWindowException
 
 import firefox_puppeteer.errors as errors
 
@@ -80,6 +80,7 @@ class TestBaseWindow(FirefoxTestCase):
                           self.marionette.find_element(By.CSS_SELECTOR, ':root'))
         self.assertEquals(win1.window_element.get_attribute('windowtype'),
                           self.marionette.get_window_type())
+        self.assertIsNotNone(win1.title)
         self.assertFalse(win1.closed)
 
         # Test invalid parameters for BaseWindow constructor
