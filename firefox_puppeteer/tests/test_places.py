@@ -5,7 +5,6 @@
 from marionette_driver import By, Wait
 
 from firefox_ui_harness import FirefoxTestCase
-from firefox_ui_harness.decorators import skip_under_xvfb
 
 
 class TestPlaces(FirefoxTestCase):
@@ -24,7 +23,6 @@ class TestPlaces(FirefoxTestCase):
         finally:
             FirefoxTestCase.tearDown(self)
 
-    @skip_under_xvfb
     def get_all_urls_in_history(self):
         return self.marionette.execute_script("""
           let hs = Cc["@mozilla.org/browser/nav-history-service;1"]
