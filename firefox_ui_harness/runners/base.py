@@ -50,7 +50,7 @@ DEFAULT_PREFS = {
     'focusmanager.testmode': True,
     'geo.provider.testing': True,
     'javascript.options.showInConsole': True,
-    'marionette.logging': False,
+    'marionette.logging': True,
     'security.notification_enable_delay': 0,
     'signon.rememberSignons': False,
     'startup.homepage_welcome_url': 'about:blank',
