@@ -40,10 +40,10 @@ before_script:
 
 script:
     # Run in non-e10s mode
-    - firefox-ui-tests --installer *firefox-* --gecko-log -
+    - firefox-ui-tests --installer *firefox-* --gecko-log - firefox_puppeteer/tests/test_page_info_window.py
 
     # Run in e10s mode
-    - firefox-ui-tests --installer *firefox-* --gecko-log - --e10s
+    #- firefox-ui-tests --installer *firefox-* --gecko-log - --e10s
 
 notifications:
     irc:
